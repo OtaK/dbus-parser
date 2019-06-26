@@ -1,7 +1,7 @@
 pub mod components;
 
 use self::components::*;
-use crate::Parsable;
+use crate::DbusType;
 use nom::branch::alt;
 use nom::{
     combinator::{map, map_res},
@@ -21,7 +21,7 @@ pub struct FixedHeaderPart {
     pub msg_serial: u32,
 }
 
-impl Parsable for FixedHeaderPart {
+impl DbusType for FixedHeaderPart {
     fn parse(i: &[u8], _: Option<MessageEndianness>) -> IResult<&[u8], Self> {
         let (i, endianness) = map_res(alt((le_u8, be_u8)), MessageEndianness::try_from)(i)?;
 
