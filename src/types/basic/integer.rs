@@ -47,5 +47,4 @@ impl_parsable!(DbusInt32, i32, le_i32, be_i32);
 impl_parsable!(DbusUint64, u64, le_u64, be_u64);
 impl_parsable!(DbusInt64, i64, le_i64, be_i64);
 impl_parsable!(noeq DbusDouble, f64, le_f64, be_f64);
-#[cfg(unix)]
 impl_parsable!(DbusUnixFd, u32, le_u32, be_u32);
