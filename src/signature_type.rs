@@ -1,8 +1,9 @@
 
+use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::types::basic::*;
 use crate::{DbusType, DbusTypeContainer};
-use nom::IResult;
+use core::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -35,6 +36,42 @@ pub enum SignatureType {
     GVariantConversion = b'^',
 }
 
+impl TryFrom<u8> for SignatureType {
+    type Error = DbusParseError;
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
+        match v {
+            0x00 => Ok(SignatureType::Invalid),
+            b'b' => Ok(SignatureType::Boolean),
+            b'y' => Ok(SignatureType::Byte),
+            b'q' => Ok(SignatureType::Uint16),
+            b'n' => Ok(SignatureType::Int16),
+            b'u' => Ok(SignatureType::Uint32),
+            b'i' => Ok(SignatureType::Int32),
+            b't' => Ok(SignatureType::Uint64),
+            b'x' => Ok(SignatureType::Int64),
+            b'f' => Ok(SignatureType::Double),
+            b'h' => Ok(SignatureType::UnixFd),
+            b'g' => Ok(SignatureType::Signature),
+            b's' => Ok(SignatureType::String),
+            b'o' => Ok(SignatureType::ObjectPath),
+            b'a' => Ok(SignatureType::Array),
+            b'v' => Ok(SignatureType::Variant),
+            b'(' => Ok(SignatureType::StructStart),
+            b')' => Ok(SignatureType::StructEnd),
+            b'{' => Ok(SignatureType::DictStart),
+            b'}' => Ok(SignatureType::DictEnd),
+            b'm' => Ok(SignatureType::GVariant),
+            b'*' => Ok(SignatureType::SingleCompleteType),
+            b'?' => Ok(SignatureType::BasicType),
+            b'@' => Ok(SignatureType::GVariantType),
+            b'&' => Ok(SignatureType::GVariantPointer),
+            b'^' => Ok(SignatureType::GVariantConversion),
+            _ => Err(DbusParseError::InvalidSignature),
+        }
+    }
+}
+
 impl SignatureType {
     fn parse_buffer<'a>(
         &self,
@@ -42,7 +79,6 @@ impl SignatureType {
         endianness: Option<MessageEndianness>,
     ) -> Option<nom::IResult<&'a [u8], DbusTypeContainer>> {
         match self {
-            SignatureType::Invalid => None,
             SignatureType::Boolean => {
                 Some(DbusBoolean::parse(buf, endianness).map(DbusTypeContainer::map_from))
             }
@@ -85,25 +121,36 @@ impl SignatureType {
             SignatureType::Array => unimplemented!(),
             SignatureType::Variant => unimplemented!(),
             SignatureType::StructStart => unimplemented!(),
-            SignatureType::StructEnd => None,
             SignatureType::DictStart => unimplemented!(),
-            SignatureType::DictEnd => None,
             SignatureType::GVariant => unimplemented!(),
-            SignatureType::SingleCompleteType => unimplemented!(),
-            SignatureType::BasicType => unimplemented!(),
             SignatureType::GVariantType => unimplemented!(),
             SignatureType::GVariantPointer => unimplemented!(),
             SignatureType::GVariantConversion => unimplemented!(),
+            _ => None,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Signature(Vec<SignatureType>);
 
 impl Signature {
     pub fn new(signature: Vec<SignatureType>) -> Self {
         Signature(signature)
+    }
+}
+
+impl std::ops::Deref for Signature {
+    type Target = Vec<SignatureType>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for Signature {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -113,7 +160,7 @@ impl Signature {
         &self,
         buf: &'a [u8],
         endianness: Option<MessageEndianness>,
-    ) -> IResult<&'a [u8], Vec<DbusTypeContainer>> {
+    ) -> nom::IResult<&'a [u8], Vec<DbusTypeContainer>> {
         let init = (buf, Vec::with_capacity(self.0.len()));
         self.0
             .iter()

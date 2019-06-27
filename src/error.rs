@@ -10,6 +10,8 @@ pub enum DbusParseError {
     InvalidHeaderField,
     #[fail(display = "The provided object path is invalid")]
     MalformedObjectPath,
+    #[fail(display = "The signature type is invalid")]
+    InvalidSignature,
     #[fail(display = "Unknown error")]
     UnknownError,
 }
