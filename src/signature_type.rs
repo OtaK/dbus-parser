@@ -156,7 +156,7 @@ impl std::ops::DerefMut for Signature {
 
 impl Signature {
     #[allow(dead_code)]
-    fn parse_buffer<'a>(
+    pub fn parse_buffer<'a>(
         &self,
         buf: &'a [u8],
         endianness: Option<MessageEndianness>,
