@@ -1,3 +1,4 @@
+use crate::header::components::MessageEndianness;
 use nom::IResult;
 
 mod error;
@@ -11,10 +12,12 @@ pub use self::header::*;
 pub use self::signature_type::*;
 pub use self::type_container::*;
 
-
 pub trait DbusType: std::fmt::Debug + Clone + PartialEq {
-    fn parse(
-        buf: &[u8],
-        endianness: Option<header::components::MessageEndianness>,
-    ) -> IResult<&[u8], Self>;
+    const ALIGNMENT: usize;
+
+    fn parse<'a, 'b>(
+        buf: &'b [u8],
+        endianness: MessageEndianness,
+        signature: &'a Signature,
+    ) -> IResult<&'b [u8], Self>;
 }

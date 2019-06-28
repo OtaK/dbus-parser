@@ -6,6 +6,3 @@ pub use self::array::*;
 
 mod structure;
 pub use self::structure::*;
-
-mod dict;
-pub use self::dict::*;

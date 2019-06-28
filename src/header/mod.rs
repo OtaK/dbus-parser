@@ -1,6 +1,7 @@
 pub mod components;
 
 use self::components::*;
+use crate::signature_type::Signature;
 use crate::DbusType;
 use nom::branch::alt;
 use nom::{
@@ -22,7 +23,13 @@ pub struct FixedHeaderPart {
 }
 
 impl DbusType for FixedHeaderPart {
-    fn parse(i: &[u8], _: Option<MessageEndianness>) -> IResult<&[u8], Self> {
+    const ALIGNMENT: usize = 0;
+
+    fn parse<'a, 'b>(
+        i: &'b [u8],
+        _: MessageEndianness,
+        _: &'a Signature,
+    ) -> IResult<&'b [u8], Self> {
         let (i, endianness) = map_res(alt((le_u8, be_u8)), MessageEndianness::try_from)(i)?;
 
         let (i, (message_type, flags, protocol_version, msg_len, msg_serial)) = match endianness {

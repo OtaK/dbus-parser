@@ -1,4 +1,3 @@
-
 use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::signature_type::{Signature, SignatureType};
@@ -14,16 +13,21 @@ use std::convert::{TryFrom, TryInto};
 pub struct DbusSignature(String);
 
 impl DbusType for DbusSignature {
-    fn parse(buf: &[u8], e: Option<MessageEndianness>) -> IResult<&[u8], Self> {
-        let (buf, len) =
-            match e.ok_or_else(|| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))? {
-                MessageEndianness::BigEndian => be_u32(buf),
-                MessageEndianness::LittleEndian => le_u32(buf),
-            }?;
+    const ALIGNMENT: usize = 1;
+
+    fn parse<'a, 'b>(
+        buf: &'b [u8],
+        endianness: MessageEndianness,
+        _: &'a Signature,
+    ) -> IResult<&'b [u8], Self> {
+        let (buf, len) = match endianness {
+            MessageEndianness::BigEndian => map(be_u32, |v| v as usize)(buf),
+            MessageEndianness::LittleEndian => map(le_u32, |v| v as usize)(buf),
+        }?;
 
         let (buf, s) = map(map_res(take(len), std::str::from_utf8), |v| Self(v.into()))(buf)?;
 
-        if s.0.len() != len as usize {
+        if s.0.len() != len {
             return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
         }
 

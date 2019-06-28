@@ -1,4 +1,5 @@
 use crate::header::components::MessageEndianness;
+use crate::signature_type::Signature;
 use crate::DbusParseError;
 use crate::DbusType;
 use core::convert::TryFrom;
@@ -8,28 +9,50 @@ use nom::combinator::map_res;
 use nom::number::streaming::{be_u32, le_u32};
 use nom::IResult;
 
+macro_rules! impl_string_parse {
+    ($target:ty) => {
+        impl DbusType for $target {
+            const ALIGNMENT: usize = 4;
+
+            fn parse<'a, 'b>(
+                buf: &'b [u8],
+                endianness: MessageEndianness,
+                _: &'a Signature,
+            ) -> IResult<&'b [u8], Self> {
+                let (buf, len) = match endianness {
+                    MessageEndianness::BigEndian => map(be_u32, |v| v as usize)(buf),
+                    MessageEndianness::LittleEndian => map(le_u32, |v| v as usize)(buf),
+                }?;
+
+                let (buf, s) = map_res(
+                    map(map_res(take(len), std::str::from_utf8), String::from),
+                    Self::try_from,
+                )(buf)?;
+
+                if s.0.len() != len {
+                    return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
+                }
+
+                let pad = 1 + ((len + 1) % Self::ALIGNMENT);
+
+                let (buf, rest) = take(pad)(buf)?;
+                if rest.len() != 1 || rest[0] != b'\0' {
+                    return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
+                }
+
+                Ok((buf, s))
+            }
+        }
+    };
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DbusString(String);
+impl_string_parse!(DbusString);
 
-impl DbusType for DbusString {
-    fn parse(buf: &[u8], e: Option<MessageEndianness>) -> IResult<&[u8], Self> {
-        let (buf, len) =
-            match e.ok_or_else(|| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))? {
-                MessageEndianness::BigEndian => be_u32(buf),
-                MessageEndianness::LittleEndian => le_u32(buf),
-            }?;
-
-        let (buf, s) = map_res(take(len), std::str::from_utf8)(buf)?;
-        if s.len() != len as usize {
-            return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
-        }
-
-        let (buf, nul) = take(1usize)(buf)?;
-        if nul.len() != 1 || nul[0] != b'\0' {
-            return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
-        }
-
-        Ok((buf, Self(s.into())))
+impl From<String> for DbusString {
+    fn from(v: String) -> Self {
+        Self(v)
     }
 }
 
@@ -83,28 +106,4 @@ impl TryFrom<String> for DbusObjectPath {
     }
 }
 
-impl DbusType for DbusObjectPath {
-    fn parse(buf: &[u8], e: Option<MessageEndianness>) -> IResult<&[u8], Self> {
-        let (buf, len) =
-            match e.ok_or_else(|| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))? {
-                MessageEndianness::BigEndian => be_u32(buf),
-                MessageEndianness::LittleEndian => le_u32(buf),
-            }?;
-
-        let (buf, s) = map_res(
-            map(map_res(take(len), std::str::from_utf8), String::from),
-            Self::try_from,
-        )(buf)?;
-
-        if s.0.len() != len as usize {
-            return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
-        }
-
-        let (buf, nul) = take(1usize)(buf)?;
-        if nul.len() != 1 || nul[0] != b'\0' {
-            return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
-        }
-
-        Ok((buf, s))
-    }
-}
+impl_string_parse!(DbusObjectPath);

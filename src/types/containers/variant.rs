@@ -1,7 +1,7 @@
 use crate::header::components::MessageEndianness;
 use crate::types::basic::*;
-use crate::{DbusTypeContainer, DbusType};
 use crate::Signature;
+use crate::{DbusType, DbusTypeContainer};
 use nom::IResult;
 use std::convert::TryInto;
 
@@ -12,14 +12,24 @@ pub struct DbusVariant {
 }
 
 impl DbusType for DbusVariant {
-    fn parse(buf: &[u8], endianness: Option<MessageEndianness>) -> IResult<&[u8], Self> {
-        let (buf, signature) = DbusSignature::parse(buf, endianness)?;
-        let type_signature: Signature = signature.clone().try_into().map_err(|_| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))?;
-        let (buf, inner) = type_signature.parse_buffer(buf, endianness).map(|(buf, inner)| (buf, inner.into_iter().next().unwrap()))?;
+    const ALIGNMENT: usize = 1;
 
-        Ok((buf, DbusVariant {
-            inner,
-            signature
-        }))
+    fn parse<'a, 'b>(
+        buf: &'b [u8],
+        endianness: MessageEndianness,
+        s: &'a Signature,
+    ) -> IResult<&'b [u8], Self> {
+        let (buf, signature) = DbusSignature::parse(buf, endianness, s)?;
+
+        let type_signature: Signature = signature
+            .clone()
+            .try_into()
+            .map_err(|_| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))?;
+
+        let (buf, inner) = type_signature
+            .parse_buffer(buf, endianness, &type_signature)
+            .map(|(buf, inner)| (buf, inner.into_iter().next().unwrap()))?;
+
+        Ok((buf, DbusVariant { inner, signature }))
     }
 }
