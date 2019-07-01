@@ -14,7 +14,7 @@ macro_rules! impl_string_parse {
         impl DbusType for $target {
             const ALIGNMENT: usize = 4;
 
-            fn parse<'a, 'b>(
+            fn unmarshal<'a, 'b>(
                 buf: &'b [u8],
                 endianness: MessageEndianness,
                 _: &'a Signature,

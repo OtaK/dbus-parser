@@ -12,6 +12,8 @@ pub enum DbusParseError {
     MalformedObjectPath,
     #[fail(display = "The signature type is invalid")]
     InvalidSignature,
+    #[fail(display = "The type transformation is invalid, the container holds a different variant than the target")]
+    InvalidContainerVariantTarget,
     #[fail(display = "Unknown error")]
     UnknownError,
 }

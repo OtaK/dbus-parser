@@ -10,7 +10,7 @@ macro_rules! __inner_impl_parsable {
         impl DbusType for $name {
             const ALIGNMENT: usize = $align;
 
-            fn parse<'a, 'b>(
+            fn unmarshal<'a, 'b>(
                 buf: &'b [u8],
                 endianness: MessageEndianness,
                 _: &'a Signature,
@@ -22,6 +22,18 @@ macro_rules! __inner_impl_parsable {
                     },
                     |v: $inner| $name(v),
                 )(buf)
+            }
+        }
+
+        impl From<$inner> for $name {
+            fn from(v: $inner) -> Self {
+                Self(v)
+            }
+        }
+
+        impl Into<$inner> for $name {
+            fn into(self) -> $inner {
+                self.0
             }
         }
     };

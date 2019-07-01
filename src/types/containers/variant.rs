@@ -14,12 +14,12 @@ pub struct DbusVariant {
 impl DbusType for DbusVariant {
     const ALIGNMENT: usize = 1;
 
-    fn parse<'a, 'b>(
+    fn unmarshal<'a, 'b>(
         buf: &'b [u8],
         endianness: MessageEndianness,
         s: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
-        let (buf, signature) = DbusSignature::parse(buf, endianness, s)?;
+        let (buf, signature) = DbusSignature::unmarshal(buf, endianness, s)?;
 
         let type_signature: Signature = signature
             .clone()

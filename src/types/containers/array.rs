@@ -14,7 +14,7 @@ pub struct DbusArray<T: DbusType>(Vec<T>);
 impl<T: DbusType> DbusType for DbusArray<T> {
     const ALIGNMENT: usize = 4;
 
-    fn parse<'a, 'b>(
+    fn unmarshal<'a, 'b>(
         buf: &'b [u8],
         endianness: MessageEndianness,
         signature: &'a Signature,
@@ -28,7 +28,7 @@ impl<T: DbusType> DbusType for DbusArray<T> {
         // Advance buffer by discarding bytes to pad alignment
         let (buf, _) = take(std::cmp::max(Self::ALIGNMENT, inner_alignment))(buf)?;
 
-        let mut it = iterator(buf, |buf| T::parse(buf, endianness, signature));
+        let mut it = iterator(buf, |buf| T::unmarshal(buf, endianness, signature));
         let inner: Vec<T> = it.collect();
         let (buf, _) = it.finish()?;
 

@@ -1,5 +1,7 @@
+use crate::types::basic::DbusByte;
 use crate::error::DbusParseError;
 use bitflags::bitflags;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
@@ -92,7 +94,7 @@ impl Default for HeaderField {
     }
 }
 
-impl std::convert::TryFrom<u8> for HeaderField {
+impl TryFrom<u8> for HeaderField {
     type Error = DbusParseError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -108,5 +110,14 @@ impl std::convert::TryFrom<u8> for HeaderField {
             0x09 => Ok(HeaderField::UnixFdCount),
             _ => Err(DbusParseError::InvalidHeaderField),
         }
+    }
+}
+
+impl TryFrom<DbusByte> for HeaderField {
+    type Error = DbusParseError;
+
+    fn try_from(value: DbusByte) -> Result<Self, Self::Error> {
+        let value: u8 = value.into();
+        Self::try_from(value)
     }
 }

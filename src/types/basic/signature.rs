@@ -15,7 +15,7 @@ pub struct DbusSignature(String);
 impl DbusType for DbusSignature {
     const ALIGNMENT: usize = 1;
 
-    fn parse<'a, 'b>(
+    fn unmarshal<'a, 'b>(
         buf: &'b [u8],
         endianness: MessageEndianness,
         _: &'a Signature,

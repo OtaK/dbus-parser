@@ -15,7 +15,7 @@ pub use self::type_container::*;
 pub trait DbusType: std::fmt::Debug + Clone + PartialEq {
     const ALIGNMENT: usize;
 
-    fn parse<'a, 'b>(
+    fn unmarshal<'a, 'b>(
         buf: &'b [u8],
         endianness: MessageEndianness,
         signature: &'a Signature,
