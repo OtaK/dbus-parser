@@ -1,5 +1,6 @@
-use crate::types::basic::DbusByte;
 use crate::error::DbusParseError;
+use crate::type_container::DbusTypeContainer;
+use crate::types::basic::DbusByte;
 use bitflags::bitflags;
 use std::convert::{TryFrom, TryInto};
 
@@ -119,5 +120,14 @@ impl TryFrom<DbusByte> for HeaderField {
     fn try_from(value: DbusByte) -> Result<Self, Self::Error> {
         let value: u8 = value.into();
         Self::try_from(value)
+    }
+}
+
+impl TryFrom<DbusTypeContainer> for HeaderField {
+    type Error = DbusParseError;
+
+    fn try_from(value: DbusTypeContainer) -> Result<Self, Self::Error> {
+        let b: DbusByte = value.try_into()?;
+        Self::try_from(b)
     }
 }

@@ -1,8 +1,6 @@
 use crate::types::{basic::*, containers::*};
-use crate::DbusType;
-use std::convert::{TryFrom, TryInto};
 use crate::DbusParseError;
-
+use std::convert::TryFrom;
 
 macro_rules! impl_from_iresult_type {
     ($container:ident, $variant:ident, $type:ident) => {
@@ -13,12 +11,12 @@ macro_rules! impl_from_iresult_type {
             }
         }
 
-        impl TryInto<$type> for $container {
+        impl TryFrom<$container> for $type {
             type Error = DbusParseError;
-            fn try_into(self) -> Result<$type, Self::Error> {
-                match self {
+            fn try_from(v: $container) -> Result<Self, Self::Error> {
+                match v {
                     $container::$variant(v) => Ok(v),
-                    _ => Err(DbusParseError::InvalidContainerVariantTarget)
+                    _ => Err(DbusParseError::InvalidContainerVariantTarget),
                 }
             }
         }
@@ -32,13 +30,13 @@ macro_rules! impl_from_iresult_type {
             }
         }
 
-        impl TryInto<$type> for $container {
+        impl TryFrom<$container> for $type {
             type Error = DbusParseError;
 
-            fn try_into(self) -> Result<$type, Self::Error> {
-                match self {
+            fn try_from(v: $container) -> Result<Self, Self::Error> {
+                match v {
                     $container::$variant(v) => Ok(*v),
-                    _ => Err(DbusParseError::InvalidContainerVariantTarget)
+                    _ => Err(DbusParseError::InvalidContainerVariantTarget),
                 }
             }
         }

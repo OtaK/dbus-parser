@@ -1,8 +1,8 @@
-use nom::combinator::map_res;
 use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::types::basic::*;
 use crate::{DbusType, DbusTypeContainer};
+use nom::combinator::map_res;
 use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,45 +80,58 @@ impl SignatureType {
         signature: &Signature,
     ) -> Option<nom::IResult<&'a [u8], DbusTypeContainer>> {
         match self {
-            SignatureType::Boolean => Some(
-                map_res(|buf| DbusBoolean::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Byte => Some(
-                map_res(|buf| DbusByte::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Uint16 => Some(
-                map_res(|buf| DbusUint16::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Int16 => Some(
-                map_res(|buf| DbusInt16::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Uint32 => Some(
-                map_res(|buf| DbusUint32::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Int32 => Some(
-                map_res(|buf| DbusInt32::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Uint64 => Some(
-                map_res(|buf| DbusUint64::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Int64 => Some(
-                map_res(|buf| DbusInt64::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Double => Some(
-                map_res(|buf| DbusDouble::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::UnixFd => Some(
-                map_res(|buf| DbusUnixFd::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::Signature => Some(
-                map_res(|buf| DbusSignature::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::String => Some(
-                map_res(|buf| DbusString::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
-            SignatureType::ObjectPath => Some(
-                map_res(|buf| DbusObjectPath::unmarshal(buf, endianness, signature), DbusTypeContainer::try_from)(buf),
-            ),
+            SignatureType::Boolean => Some(map_res(
+                |buf| DbusBoolean::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Byte => Some(map_res(
+                |buf| DbusByte::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Uint16 => Some(map_res(
+                |buf| DbusUint16::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Int16 => Some(map_res(
+                |buf| DbusInt16::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Uint32 => Some(map_res(
+                |buf| DbusUint32::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Int32 => Some(map_res(
+                |buf| DbusInt32::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Uint64 => Some(map_res(
+                |buf| DbusUint64::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Int64 => Some(map_res(
+                |buf| DbusInt64::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Double => Some(map_res(
+                |buf| DbusDouble::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::UnixFd => Some(map_res(
+                |buf| DbusUnixFd::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::Signature => Some(map_res(
+                |buf| DbusSignature::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::String => Some(map_res(
+                |buf| DbusString::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
+            SignatureType::ObjectPath => Some(map_res(
+                |buf| DbusObjectPath::unmarshal(buf, endianness, signature),
+                DbusTypeContainer::try_from,
+            )(buf)),
             SignatureType::Array => unimplemented!(),
             SignatureType::Variant => unimplemented!(),
             SignatureType::StructStart => unimplemented!(),

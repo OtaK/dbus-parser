@@ -1,11 +1,11 @@
 use crate::header::components::MessageEndianness;
 use crate::signature_type::Signature;
 use crate::type_container::DbusTypeContainer;
-use crate::{DbusType, DbusParseError};
+use crate::{DbusParseError, DbusType};
 use nom::combinator::iterator;
 use nom::IResult;
-use std::convert::{TryFrom, TryInto};
 use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DbusStruct(Vec<DbusTypeContainer>);
@@ -58,9 +58,11 @@ impl DbusDict {
 
 impl From<Vec<DbusTypeContainer>> for DbusDict {
     fn from(v: Vec<DbusTypeContainer>) -> Self {
-        Self(v.chunks(2).map(|tmp| {
-            DbusDictEntry(tmp[0], tmp[1])
-        }).collect())
+        Self(
+            v.chunks(2)
+                .map(|tmp| DbusDictEntry(tmp[0].clone(), tmp[1].clone()))
+                .collect(),
+        )
     }
 }
 
@@ -72,7 +74,9 @@ impl DbusType for DbusDict {
         endianness: MessageEndianness,
         signature: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
-        let mut it = iterator(buf, |buf| DbusDictEntry::unmarshal(buf, endianness, signature));
+        let mut it = iterator(buf, |buf| {
+            DbusDictEntry::unmarshal(buf, endianness, signature)
+        });
 
         let inner = it.collect();
         let (buf, _) = it.finish()?;
@@ -81,16 +85,22 @@ impl DbusType for DbusDict {
     }
 }
 
-impl<K: TryFrom<DbusTypeContainer, Error = DbusParseError> + Eq + std::hash::Hash, V: TryFrom<DbusTypeContainer, Error = DbusParseError>> TryInto<HashMap<K, V>> for DbusDict {
+impl<
+        K: TryFrom<DbusTypeContainer, Error = DbusParseError> + Eq + std::hash::Hash,
+        V: TryFrom<DbusTypeContainer, Error = DbusParseError>,
+    > TryInto<HashMap<K, V>> for DbusDict
+{
     type Error = DbusParseError;
 
     fn try_into(self) -> Result<HashMap<K, V>, Self::Error> {
-        self.0.into_iter().try_fold(HashMap::default(), |mut hash, current_entry| {
-            let k = current_entry.0.try_into()?;
-            let v = current_entry.1.try_into()?;
-            hash.insert(k, v);
+        self.0
+            .into_iter()
+            .try_fold(HashMap::default(), |mut hash, current_entry| {
+                let k = current_entry.0.try_into()?;
+                let v = current_entry.1.try_into()?;
+                hash.insert(k, v);
 
-            Ok(hash)
-        })
+                Ok(hash)
+            })
     }
 }

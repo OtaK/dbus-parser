@@ -1,9 +1,9 @@
 pub mod components;
 
+use self::components::*;
+use crate::signature_type::{Signature, SignatureType};
 use crate::types::containers::DbusDict;
 use crate::types::containers::DbusVariant;
-use self::components::*;
-use crate::signature_type::{SignatureType, Signature};
 use crate::DbusType;
 use nom::branch::alt;
 use nom::{
@@ -12,7 +12,7 @@ use nom::{
     sequence::tuple,
     *,
 };
-use std::convert::{TryInto, TryFrom};
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct FixedHeaderPart {
@@ -76,9 +76,20 @@ impl DbusType for HeaderFields {
         endianness: MessageEndianness,
         _: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
-        let signature = Signature::new(vec![SignatureType::Array, SignatureType::DictStart, SignatureType::Byte, SignatureType::Variant, SignatureType::DictEnd]);
-        let (buf, dict) = map(|buf| signature.parse_buffer(buf, endianness, &signature), DbusDict::from)(buf)?;
-        let inner = dict.try_into().unwrap();
+        let signature = Signature::new(vec![
+            SignatureType::Array,
+            SignatureType::DictStart,
+            SignatureType::Byte,
+            SignatureType::Variant,
+            SignatureType::DictEnd,
+        ]);
+        let (buf, inner) = map_res(
+            map(
+                |buf| signature.parse_buffer(buf, endianness, &signature),
+                DbusDict::from,
+            ),
+            DbusDict::try_into,
+        )(buf)?;
         Ok((buf, Self(inner)))
     }
 }
