@@ -18,7 +18,7 @@ impl DbusType for DbusStruct {
         endianness: MessageEndianness,
         signature: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
-        let (buf, inner) = signature.parse_buffer(buf, endianness, signature)?;
+        let (buf, inner) = signature.parse_buffer(buf, endianness)?;
         Ok((buf, Self(inner)))
     }
 }
@@ -34,7 +34,7 @@ impl DbusType for DbusDictEntry {
         endianness: MessageEndianness,
         signature: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
-        let (buf, inner) = signature.parse_buffer(buf, endianness, &signature)?;
+        let (buf, inner) = signature.parse_buffer(buf, endianness)?;
         if inner.len() != 2 {
             return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
         }

@@ -1,9 +1,11 @@
 pub mod components;
 
-use crate::error::DbusParseError;
-use crate::types::{containers::*, basic::*};
 use self::components::*;
+use crate::error::DbusParseError;
+use crate::message::Message;
 use crate::signature_type::{Signature, SignatureType};
+use crate::type_container::DbusTypeContainer;
+use crate::types::{basic::*, containers::*};
 use crate::DbusType;
 use nom::branch::alt;
 use nom::{
@@ -99,7 +101,7 @@ impl DbusType for RawHeaderFields {
         ]);
         let (buf, inner) = map_res(
             map(
-                |buf| signature.parse_buffer(buf, endianness, &signature),
+                |buf| signature.parse_buffer(buf, endianness),
                 DbusDict::from,
             ),
             DbusDict::try_into,
@@ -118,7 +120,7 @@ pub struct HeaderFields {
     destination: Option<DbusString>,
     sender: Option<DbusString>,
     signature: Option<Signature>,
-    unix_fds: Option<DbusUint32>
+    unix_fds: Option<DbusUint32>,
 }
 
 impl TryFrom<RawHeaderFields> for HeaderFields {
@@ -126,39 +128,66 @@ impl TryFrom<RawHeaderFields> for HeaderFields {
 
     fn try_from(mut fields: RawHeaderFields) -> Result<Self, Self::Error> {
         let mut ret = Self::default();
-        if let Some(path) = fields.remove(&HeaderField::Path).map(DbusVariant::into_inner) {
+        if let Some(path) = fields
+            .remove(&HeaderField::Path)
+            .map(DbusVariant::into_inner)
+        {
             ret.path = Some(DbusObjectPath::try_from(path)?);
         }
 
-        if let Some(interface) = fields.remove(&HeaderField::Interface).map(DbusVariant::into_inner) {
+        if let Some(interface) = fields
+            .remove(&HeaderField::Interface)
+            .map(DbusVariant::into_inner)
+        {
             ret.interface = Some(DbusString::try_from(interface)?);
         }
 
-        if let Some(member) = fields.remove(&HeaderField::Member).map(DbusVariant::into_inner) {
+        if let Some(member) = fields
+            .remove(&HeaderField::Member)
+            .map(DbusVariant::into_inner)
+        {
             ret.member = Some(DbusString::try_from(member)?);
         }
 
-        if let Some(error_name) = fields.remove(&HeaderField::ErrorName).map(DbusVariant::into_inner) {
+        if let Some(error_name) = fields
+            .remove(&HeaderField::ErrorName)
+            .map(DbusVariant::into_inner)
+        {
             ret.error_name = Some(DbusString::try_from(error_name)?);
         }
 
-        if let Some(reply_serial) = fields.remove(&HeaderField::ReplySerial).map(DbusVariant::into_inner) {
+        if let Some(reply_serial) = fields
+            .remove(&HeaderField::ReplySerial)
+            .map(DbusVariant::into_inner)
+        {
             ret.reply_serial = Some(DbusUint32::try_from(reply_serial)?);
         }
 
-        if let Some(destination) = fields.remove(&HeaderField::Destination).map(DbusVariant::into_inner) {
+        if let Some(destination) = fields
+            .remove(&HeaderField::Destination)
+            .map(DbusVariant::into_inner)
+        {
             ret.destination = Some(DbusString::try_from(destination)?);
         }
 
-        if let Some(sender) = fields.remove(&HeaderField::Sender).map(DbusVariant::into_inner) {
+        if let Some(sender) = fields
+            .remove(&HeaderField::Sender)
+            .map(DbusVariant::into_inner)
+        {
             ret.sender = Some(DbusString::try_from(sender)?);
         }
 
-        if let Some(signature) = fields.remove(&HeaderField::Signature).map(DbusVariant::into_inner) {
+        if let Some(signature) = fields
+            .remove(&HeaderField::Signature)
+            .map(DbusVariant::into_inner)
+        {
             ret.signature = Some(DbusSignature::try_from(signature)?.try_into()?);
         }
 
-        if let Some(unix_fds) = fields.remove(&HeaderField::UnixFdCount).map(DbusVariant::into_inner) {
+        if let Some(unix_fds) = fields
+            .remove(&HeaderField::UnixFdCount)
+            .map(DbusVariant::into_inner)
+        {
             ret.unix_fds = Some(DbusUint32::try_from(unix_fds)?);
         }
 
@@ -169,7 +198,7 @@ impl TryFrom<RawHeaderFields> for HeaderFields {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Header {
     fixed: FixedHeaderPart,
-    fields: HeaderFields
+    fields: HeaderFields,
 }
 
 impl DbusType for Header {
@@ -181,11 +210,39 @@ impl DbusType for Header {
         s: &'a Signature,
     ) -> IResult<&'b [u8], Self> {
         let (buf, fixed) = FixedHeaderPart::unmarshal(buf, e, s)?;
-        let (buf, fields) = map_res(|buf| RawHeaderFields::unmarshal(buf, fixed.endianness, s), HeaderFields::try_from)(buf)?;
+        let (buf, fields) = map_res(
+            |buf| RawHeaderFields::unmarshal(buf, fixed.endianness, s),
+            HeaderFields::try_from,
+        )(buf)?;
 
-        Ok((buf, Self {
-            fixed,
-            fields
-        }))
+        Ok((buf, Self { fixed, fields }))
+    }
+}
+
+impl Header {
+    pub fn parse_message<'a>(self, buf: &'a [u8]) -> nom::IResult<&'a [u8], Message> {
+        if let Some(signature) = &self.fields.signature {
+            signature
+                .parse_buffer(buf, self.fixed.endianness)
+                .map(move |(buf, parts)| {
+                    (
+                        buf,
+                        Message {
+                            header: self,
+                            message: parts,
+                        },
+                    )
+                })
+        } else if buf.len() == 0 {
+            Ok((
+                buf,
+                Message {
+                    header: self,
+                    message: vec![],
+                },
+            ))
+        } else {
+            Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)))
+        }
     }
 }

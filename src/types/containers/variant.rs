@@ -33,7 +33,7 @@ impl DbusType for DbusVariant {
             .map_err(|_| nom::Err::Failure((buf, nom::error::ErrorKind::Verify)))?;
 
         let (buf, inner) = type_signature
-            .parse_buffer(buf, endianness, &type_signature)
+            .parse_buffer(buf, endianness)
             .map(|(buf, inner)| (buf, inner.into_iter().next().unwrap()))?;
 
         Ok((buf, DbusVariant { inner, signature }))

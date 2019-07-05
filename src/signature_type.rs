@@ -77,59 +77,58 @@ impl SignatureType {
         &self,
         buf: &'a [u8],
         endianness: MessageEndianness,
-        signature: &Signature,
     ) -> Option<nom::IResult<&'a [u8], DbusTypeContainer>> {
         match self {
             SignatureType::Boolean => Some(map_res(
-                |buf| DbusBoolean::unmarshal(buf, endianness, signature),
+                |buf| DbusBoolean::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Byte => Some(map_res(
-                |buf| DbusByte::unmarshal(buf, endianness, signature),
+                |buf| DbusByte::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Uint16 => Some(map_res(
-                |buf| DbusUint16::unmarshal(buf, endianness, signature),
+                |buf| DbusUint16::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Int16 => Some(map_res(
-                |buf| DbusInt16::unmarshal(buf, endianness, signature),
+                |buf| DbusInt16::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Uint32 => Some(map_res(
-                |buf| DbusUint32::unmarshal(buf, endianness, signature),
+                |buf| DbusUint32::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Int32 => Some(map_res(
-                |buf| DbusInt32::unmarshal(buf, endianness, signature),
+                |buf| DbusInt32::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Uint64 => Some(map_res(
-                |buf| DbusUint64::unmarshal(buf, endianness, signature),
+                |buf| DbusUint64::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Int64 => Some(map_res(
-                |buf| DbusInt64::unmarshal(buf, endianness, signature),
+                |buf| DbusInt64::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Double => Some(map_res(
-                |buf| DbusDouble::unmarshal(buf, endianness, signature),
+                |buf| DbusDouble::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::UnixFd => Some(map_res(
-                |buf| DbusUnixFd::unmarshal(buf, endianness, signature),
+                |buf| DbusUnixFd::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Signature => Some(map_res(
-                |buf| DbusSignature::unmarshal(buf, endianness, signature),
+                |buf| DbusSignature::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::String => Some(map_res(
-                |buf| DbusString::unmarshal(buf, endianness, signature),
+                |buf| DbusString::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::ObjectPath => Some(map_res(
-                |buf| DbusObjectPath::unmarshal(buf, endianness, signature),
+                |buf| DbusObjectPath::unmarshal(buf, endianness, &(*self).into()),
                 DbusTypeContainer::try_from,
             )(buf)),
             SignatureType::Array => unimplemented!(),
@@ -154,6 +153,12 @@ impl Signature {
     }
 }
 
+impl From<SignatureType> for Signature {
+    fn from(s: SignatureType) -> Self {
+        Self(vec![s])
+    }
+}
+
 impl std::ops::Deref for Signature {
     type Target = Vec<SignatureType>;
 
@@ -173,14 +178,12 @@ impl Signature {
         &self,
         buf: &'a [u8],
         endianness: MessageEndianness,
-        signature: &Signature,
     ) -> nom::IResult<&'a [u8], Vec<DbusTypeContainer>> {
         let init = (buf, Vec::with_capacity(self.0.len()));
         self.0
             .iter()
             .try_fold(init, move |(buf, mut ret), signature_type| {
-                if let Some(parse_result) = signature_type.parse_buffer(buf, endianness, signature)
-                {
+                if let Some(parse_result) = signature_type.parse_buffer(buf, endianness) {
                     let (buf, container) = parse_result?;
                     ret.push(container);
                     Ok((buf, ret))
