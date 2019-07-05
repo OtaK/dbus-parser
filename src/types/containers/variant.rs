@@ -11,6 +11,12 @@ pub struct DbusVariant {
     inner: DbusTypeContainer,
 }
 
+impl DbusVariant {
+    pub fn into_inner(self) -> DbusTypeContainer {
+        self.inner
+    }
+}
+
 impl DbusType for DbusVariant {
     const ALIGNMENT: usize = 1;
 
@@ -31,5 +37,19 @@ impl DbusType for DbusVariant {
             .map(|(buf, inner)| (buf, inner.into_iter().next().unwrap()))?;
 
         Ok((buf, DbusVariant { inner, signature }))
+    }
+}
+
+impl std::ops::Deref for DbusVariant {
+    type Target = DbusTypeContainer;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl std::ops::DerefMut for DbusVariant {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }

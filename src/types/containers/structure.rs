@@ -51,6 +51,7 @@ impl DbusType for DbusDictEntry {
 pub struct DbusDict(Vec<DbusDictEntry>);
 
 impl DbusDict {
+    #[allow(dead_code)]
     pub fn new(inner: Vec<DbusDictEntry>) -> Self {
         Self(inner)
     }
