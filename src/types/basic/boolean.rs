@@ -1,5 +1,7 @@
+use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::signature_type::Signature;
+use crate::types::basic::integer::DbusUint32;
 use crate::DbusType;
 use nom::combinator::map;
 use nom::number::streaming::{be_u32, le_u32};
@@ -23,5 +25,9 @@ impl DbusType for DbusBoolean {
             },
             |v: u32| DbusBoolean(v != 0u32),
         )(buf)
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        DbusUint32::marshal((self.0 as u32).into(), endianness)
     }
 }

@@ -21,6 +21,10 @@ impl DbusType for DbusStruct {
         let (buf, inner) = signature.parse_buffer(buf, endianness)?;
         Ok((buf, Self(inner)))
     }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,6 +48,10 @@ impl DbusType for DbusDictEntry {
         let v2 = iter.next().unwrap().into();
 
         Ok((buf, Self(v1, v2)))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
     }
 }
 
@@ -83,6 +91,10 @@ impl DbusType for DbusDict {
         let (buf, _) = it.finish()?;
 
         Ok((buf, Self(inner)))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
     }
 }
 

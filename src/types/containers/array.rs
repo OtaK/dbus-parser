@@ -1,5 +1,7 @@
+use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::signature_type::Signature;
+use crate::types::basic::DbusUint32;
 use crate::DbusType;
 use nom::bytes::streaming::take;
 use nom::combinator::iterator;
@@ -37,5 +39,25 @@ impl<T: DbusType> DbusType for DbusArray<T> {
         }
 
         Ok((buf, Self(inner)))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        let items_count = self.0.len();
+        let mut inner_marshalled = self.0.into_iter().try_fold(
+            Vec::with_capacity(items_count * T::ALIGNMENT),
+            |mut buf, current_entry| {
+                buf.extend(current_entry.marshal(endianness)?);
+                Ok(buf)
+            },
+        )?;
+        let inner_len = inner_marshalled.len();
+        let mut res = Vec::with_capacity(inner_len + 4);
+        res.append(&mut DbusUint32::marshal(
+            (inner_len as u32).into(),
+            endianness,
+        )?);
+        res.append(&mut inner_marshalled);
+
+        Ok(res)
     }
 }

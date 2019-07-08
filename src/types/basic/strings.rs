@@ -1,5 +1,6 @@
 use crate::header::components::MessageEndianness;
 use crate::signature_type::Signature;
+use crate::types::basic::DbusUint32;
 use crate::DbusParseError;
 use crate::DbusType;
 use core::convert::TryFrom;
@@ -41,6 +42,19 @@ macro_rules! impl_string_parse {
                 }
 
                 Ok((buf, s))
+            }
+
+            fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+                let string_len = self.0.len();
+                let alloc_len = string_len + 5;
+                let mut res = Vec::with_capacity(alloc_len);
+                res.append(&mut DbusUint32::marshal(
+                    (string_len as u32).into(),
+                    endianness,
+                )?);
+                res.append(&mut self.0.into_bytes());
+                res.push(b'\0');
+                Ok(res)
             }
         }
     };

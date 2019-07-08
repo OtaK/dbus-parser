@@ -22,4 +22,6 @@ pub trait DbusType: std::fmt::Debug + Clone + PartialEq {
         endianness: MessageEndianness,
         signature: &'a Signature,
     ) -> IResult<&'b [u8], Self>;
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError>;
 }

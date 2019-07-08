@@ -1,14 +1,15 @@
 use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::signature_type::{Signature, SignatureType};
+use crate::types::basic::DbusUint32;
 use crate::DbusType;
-
 use nom::bytes::streaming::*;
 use nom::combinator::map;
 use nom::combinator::map_res;
 use nom::number::streaming::{be_u32, le_u32};
 use nom::IResult;
 use std::convert::{TryFrom, TryInto};
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DbusSignature(String);
 
@@ -37,6 +38,19 @@ impl DbusType for DbusSignature {
         }
 
         Ok((buf, s))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        let string_len = self.0.len();
+        let alloc_len = string_len + 5;
+        let mut res = Vec::with_capacity(alloc_len);
+        res.append(&mut DbusUint32::marshal(
+            (string_len as u32).into(),
+            endianness,
+        )?);
+        res.append(&mut self.0.into_bytes());
+        res.push(b'\0');
+        Ok(res)
     }
 }
 

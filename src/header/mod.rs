@@ -64,6 +64,10 @@ impl DbusType for FixedHeaderPart {
             },
         ))
     }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -106,6 +110,10 @@ impl DbusType for RawHeaderFields {
             DbusDict::try_into,
         )(buf)?;
         Ok((buf, Self(inner)))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
     }
 }
 
@@ -215,6 +223,10 @@ impl DbusType for Header {
         )(buf)?;
 
         Ok((buf, Self { fixed, fields }))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::types::basic::*;
 use crate::Signature;
@@ -37,6 +38,10 @@ impl DbusType for DbusVariant {
             .map(|(buf, inner)| (buf, inner.into_iter().next().unwrap()))?;
 
         Ok((buf, DbusVariant { inner, signature }))
+    }
+
+    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        unimplemented!()
     }
 }
 
