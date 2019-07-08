@@ -23,6 +23,41 @@ impl DbusType for DbusStruct {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        let items_count = self.0.len();
+        let mut inner_marshalled = self.0.into_iter().try_fold(
+            Vec::with_capacity(items_count * Self::ALIGNMENT),
+            |mut buf, current_entry| {
+                buf.extend(current_entry.marshal(endianness)?);
+                let pad = buf.len() % Self::ALIGNMENT;
+                if pad > 0 {
+                    buf.extend(vec![0; pad]);
+                }
+
+                Ok(buf)
+            },
+        )?;
+
+        let inner_len = inner_marshalled.len();
+
+        if inner_len > DBUS_ARRAY_MAX_LENGTH {
+            return Err(DbusParseError::ArrayLengthOverflow);
+        }
+
+        let mut res = Vec::with_capacity(inner_len + 4);
+
+        res.append(&mut DbusUint32::marshal(
+            (inner_len as u32).into(),
+            endianness,
+        )?);
+
+        let alignment = std::cmp::max(Self::ALIGNMENT, T::ALIGNMENT);
+        if alignment > Self::ALIGNMENT {
+            res.extend(vec![0; alignment - Self::ALIGNMENT]);
+        };
+
+        res.append(&mut inner_marshalled);
+
+        Ok(res)
         unimplemented!()
     }
 }

@@ -16,6 +16,8 @@ pub enum DbusParseError {
         display = "The type transformation is invalid, the container holds a different variant than the target"
     )]
     InvalidContainerVariantTarget,
+    #[fail(display = "The array exceeds the standard-defined maximum length (2^64 or 64MB)")]
+    ArrayLengthOverflow,
     #[fail(display = "Unknown error")]
     UnknownError,
 }

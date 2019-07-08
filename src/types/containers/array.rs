@@ -10,6 +10,8 @@ use nom::number::streaming::be_u32;
 use nom::number::streaming::le_u32;
 use nom::IResult;
 
+const DBUS_ARRAY_MAX_LENGTH: usize = 2 ^ 26;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DbusArray<T: DbusType>(Vec<T>);
 
@@ -26,9 +28,18 @@ impl<T: DbusType> DbusType for DbusArray<T> {
             MessageEndianness::LittleEndian => map(le_u32, |v| v as usize)(buf),
         }?;
 
-        let inner_alignment = T::ALIGNMENT;
+        if len > DBUS_ARRAY_MAX_LENGTH {
+            return Err(nom::Err::Error((buf, nom::error::ErrorKind::Verify)));
+        }
+
         // Advance buffer by discarding bytes to pad alignment
-        let (buf, _) = take(std::cmp::max(Self::ALIGNMENT, inner_alignment))(buf)?;
+        let alignment = std::cmp::max(Self::ALIGNMENT, T::ALIGNMENT);
+        let pad = if alignment > Self::ALIGNMENT {
+            alignment - Self::ALIGNMENT
+        } else {
+            0
+        };
+        let (buf, _) = take(pad)(buf)?;
 
         let mut it = iterator(buf, |buf| T::unmarshal(buf, endianness, signature));
         let inner: Vec<T> = it.collect();
@@ -50,12 +61,25 @@ impl<T: DbusType> DbusType for DbusArray<T> {
                 Ok(buf)
             },
         )?;
+
         let inner_len = inner_marshalled.len();
+
+        if inner_len > DBUS_ARRAY_MAX_LENGTH {
+            return Err(DbusParseError::ArrayLengthOverflow);
+        }
+
         let mut res = Vec::with_capacity(inner_len + 4);
+
         res.append(&mut DbusUint32::marshal(
             (inner_len as u32).into(),
             endianness,
         )?);
+
+        let alignment = std::cmp::max(Self::ALIGNMENT, T::ALIGNMENT);
+        if alignment > Self::ALIGNMENT {
+            res.extend(vec![0; alignment - Self::ALIGNMENT]);
+        };
+
         res.append(&mut inner_marshalled);
 
         Ok(res)
