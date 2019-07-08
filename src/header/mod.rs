@@ -4,7 +4,6 @@ use self::components::*;
 use crate::error::DbusParseError;
 use crate::message::Message;
 use crate::signature_type::{Signature, SignatureType};
-use crate::type_container::DbusTypeContainer;
 use crate::types::{basic::*, containers::*};
 use crate::DbusType;
 use nom::branch::alt;

@@ -59,6 +59,8 @@ pub enum DbusTypeContainer {
     String(DbusString),
     ObjectPath(DbusObjectPath),
     Variant(Box<DbusVariant>),
+    Struct(DbusStruct),
+    Dict(DbusDict),
 }
 
 impl_from_iresult_type!(DbusTypeContainer, Boolean, DbusBoolean);
@@ -74,4 +76,6 @@ impl_from_iresult_type!(DbusTypeContainer, UnixFd, DbusUnixFd);
 impl_from_iresult_type!(DbusTypeContainer, Signature, DbusSignature);
 impl_from_iresult_type!(DbusTypeContainer, String, DbusString);
 impl_from_iresult_type!(DbusTypeContainer, ObjectPath, DbusObjectPath);
+impl_from_iresult_type!(DbusTypeContainer, Struct, DbusStruct);
+impl_from_iresult_type!(DbusTypeContainer, Dict, DbusDict);
 impl_from_iresult_type!(box DbusTypeContainer, Variant, DbusVariant);
