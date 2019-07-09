@@ -30,7 +30,16 @@ pub struct DbusVariant {
 impl_try_from!(DbusVariant, DbusString, SignatureType::String);
 impl_try_from!(DbusVariant, DbusSignature, SignatureType::Signature);
 impl_try_from!(DbusVariant, DbusObjectPath, SignatureType::ObjectPath);
+impl_try_from!(DbusVariant, DbusBoolean, SignatureType::Boolean);
+impl_try_from!(DbusVariant, DbusByte, SignatureType::Byte);
+impl_try_from!(DbusVariant, DbusUint16, SignatureType::Uint16);
+impl_try_from!(DbusVariant, DbusInt16, SignatureType::Int16);
 impl_try_from!(DbusVariant, DbusUint32, SignatureType::Uint32);
+impl_try_from!(DbusVariant, DbusInt32, SignatureType::Int32);
+impl_try_from!(DbusVariant, DbusUint64, SignatureType::Uint64);
+impl_try_from!(DbusVariant, DbusInt64, SignatureType::Int64);
+impl_try_from!(DbusVariant, DbusDouble, SignatureType::Double);
+impl_try_from!(DbusVariant, DbusUnixFd, SignatureType::UnixFd);
 
 impl DbusVariant {
     pub fn into_inner(self) -> DbusTypeContainer {
