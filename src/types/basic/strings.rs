@@ -70,8 +70,23 @@ impl From<String> for DbusString {
     }
 }
 
+impl Into<String> for DbusString {
+    fn into(self) -> String {
+        self.0
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DbusObjectPath(String);
+
+impl TryFrom<DbusString> for DbusObjectPath {
+    type Error = DbusParseError;
+
+    fn try_from(value: DbusString) -> Result<Self, Self::Error> {
+        let s: String = value.into();
+        Self::try_from(s)
+    }
+}
 
 impl TryFrom<String> for DbusObjectPath {
     type Error = DbusParseError;

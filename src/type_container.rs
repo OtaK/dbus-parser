@@ -1,5 +1,7 @@
+use crate::header::components::MessageEndianness;
 use crate::types::{basic::*, containers::*};
 use crate::DbusParseError;
+use crate::DbusType;
 use std::convert::TryFrom;
 
 macro_rules! impl_from_iresult_type {
@@ -61,6 +63,29 @@ pub enum DbusTypeContainer {
     Variant(Box<DbusVariant>),
     Struct(DbusStruct),
     Dict(DbusDict),
+}
+
+impl DbusTypeContainer {
+    pub fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+        match self {
+            DbusTypeContainer::Boolean(v) => v.marshal(endianness),
+            DbusTypeContainer::Byte(v) => v.marshal(endianness),
+            DbusTypeContainer::Uint16(v) => v.marshal(endianness),
+            DbusTypeContainer::Int16(v) => v.marshal(endianness),
+            DbusTypeContainer::Uint32(v) => v.marshal(endianness),
+            DbusTypeContainer::Int32(v) => v.marshal(endianness),
+            DbusTypeContainer::Uint64(v) => v.marshal(endianness),
+            DbusTypeContainer::Int64(v) => v.marshal(endianness),
+            DbusTypeContainer::Double(v) => v.marshal(endianness),
+            DbusTypeContainer::UnixFd(v) => v.marshal(endianness),
+            DbusTypeContainer::Signature(v) => v.marshal(endianness),
+            DbusTypeContainer::String(v) => v.marshal(endianness),
+            DbusTypeContainer::ObjectPath(v) => v.marshal(endianness),
+            DbusTypeContainer::Variant(v) => v.marshal(endianness),
+            DbusTypeContainer::Struct(v) => v.marshal(endianness),
+            DbusTypeContainer::Dict(v) => v.marshal(endianness),
+        }
+    }
 }
 
 impl_from_iresult_type!(DbusTypeContainer, Boolean, DbusBoolean);

@@ -1,16 +1,36 @@
 use crate::error::DbusParseError;
 use crate::header::components::MessageEndianness;
 use crate::types::basic::*;
-use crate::Signature;
 use crate::{DbusType, DbusTypeContainer};
+use crate::{Signature, SignatureType};
 use nom::IResult;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
+
+macro_rules! impl_try_from {
+    ($target:ty, $source:ty, $sig:expr) => {
+        impl TryFrom<$source> for $target {
+            type Error = DbusParseError;
+
+            fn try_from(value: $source) -> Result<Self, Self::Error> {
+                Ok(Self {
+                    signature: Signature::from($sig).into(),
+                    inner: value.try_into()?,
+                })
+            }
+        }
+    };
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DbusVariant {
     signature: DbusSignature,
     inner: DbusTypeContainer,
 }
+
+impl_try_from!(DbusVariant, DbusString, SignatureType::String);
+impl_try_from!(DbusVariant, DbusSignature, SignatureType::Signature);
+impl_try_from!(DbusVariant, DbusObjectPath, SignatureType::ObjectPath);
+impl_try_from!(DbusVariant, DbusUint32, SignatureType::Uint32);
 
 impl DbusVariant {
     pub fn into_inner(self) -> DbusTypeContainer {
@@ -41,7 +61,9 @@ impl DbusType for DbusVariant {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
+        let mut buf = self.signature.marshal(endianness)?;
+        buf.extend(self.inner.marshal(endianness)?);
+        Ok(buf)
     }
 }
 

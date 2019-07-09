@@ -7,7 +7,30 @@ use nom::IResult;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
-#[derive(Debug, Clone, PartialEq)]
+macro_rules! impl_marshal_struct {
+    () => {
+        fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
+            let items_count = self.0.len();
+            let res = self.0.into_iter().try_fold(
+                Vec::with_capacity(items_count * Self::ALIGNMENT),
+                |mut buf, current_entry| {
+                    let mut entry_bytes = current_entry.marshal(endianness)?;
+                    let pad = entry_bytes.len() % Self::ALIGNMENT;
+                    if pad > 0 {
+                        entry_bytes.extend(vec![0; pad]);
+                    }
+
+                    buf.extend(entry_bytes);
+                    Ok(buf)
+                },
+            )?;
+
+            Ok(res)
+        }
+    };
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct DbusStruct(Vec<DbusTypeContainer>);
 
 impl DbusType for DbusStruct {
@@ -22,44 +45,7 @@ impl DbusType for DbusStruct {
         Ok((buf, Self(inner)))
     }
 
-    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        let items_count = self.0.len();
-        let mut inner_marshalled = self.0.into_iter().try_fold(
-            Vec::with_capacity(items_count * Self::ALIGNMENT),
-            |mut buf, current_entry| {
-                buf.extend(current_entry.marshal(endianness)?);
-                let pad = buf.len() % Self::ALIGNMENT;
-                if pad > 0 {
-                    buf.extend(vec![0; pad]);
-                }
-
-                Ok(buf)
-            },
-        )?;
-
-        let inner_len = inner_marshalled.len();
-
-        if inner_len > DBUS_ARRAY_MAX_LENGTH {
-            return Err(DbusParseError::ArrayLengthOverflow);
-        }
-
-        let mut res = Vec::with_capacity(inner_len + 4);
-
-        res.append(&mut DbusUint32::marshal(
-            (inner_len as u32).into(),
-            endianness,
-        )?);
-
-        let alignment = std::cmp::max(Self::ALIGNMENT, T::ALIGNMENT);
-        if alignment > Self::ALIGNMENT {
-            res.extend(vec![0; alignment - Self::ALIGNMENT]);
-        };
-
-        res.append(&mut inner_marshalled);
-
-        Ok(res)
-        unimplemented!()
-    }
+    impl_marshal_struct!();
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -86,11 +72,23 @@ impl DbusType for DbusDictEntry {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
+        let mut buf = self.0.marshal(endianness)?;
+        let pad = buf.len() % Self::ALIGNMENT;
+        if pad > 0 {
+            buf.extend(vec![0; pad]);
+        }
+
+        buf.extend(self.1.marshal(endianness)?);
+        let pad = buf.len() % Self::ALIGNMENT;
+        if pad > 0 {
+            buf.extend(vec![0; pad]);
+        }
+
+        Ok(buf)
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct DbusDict(Vec<DbusDictEntry>);
 
 impl DbusDict {
@@ -128,9 +126,7 @@ impl DbusType for DbusDict {
         Ok((buf, Self(inner)))
     }
 
-    fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
-    }
+    impl_marshal_struct!();
 }
 
 impl<

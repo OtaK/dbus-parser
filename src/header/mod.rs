@@ -66,7 +66,27 @@ impl DbusType for FixedHeaderPart {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
+        let mut buf = Vec::with_capacity(12);
+        match endianness {
+            MessageEndianness::BigEndian => {
+                buf.push((self.endianness as u8).to_be());
+                buf.push((self.message_type as u8).to_be());
+                buf.push(self.flags.bits().to_be());
+                buf.push(self.protocol_version.to_be());
+                buf.copy_from_slice(&self.msg_len.to_be_bytes());
+                buf.copy_from_slice(&self.msg_serial.to_be_bytes());
+            }
+            MessageEndianness::LittleEndian => {
+                buf.push((self.endianness as u8).to_le());
+                buf.push((self.message_type as u8).to_le());
+                buf.push(self.flags.bits().to_le());
+                buf.push(self.protocol_version.to_le());
+                buf.copy_from_slice(&self.msg_len.to_le_bytes());
+                buf.copy_from_slice(&self.msg_serial.to_le_bytes());
+            }
+        }
+
+        Ok(buf)
     }
 }
 
@@ -113,7 +133,17 @@ impl DbusType for RawHeaderFields {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
+        let dict: DbusDict = self
+            .0
+            .into_iter()
+            .try_fold(vec![], |mut vec, (key, value)| {
+                vec.push(DbusByte::from(key as u8).try_into()?);
+                vec.push(value.try_into()?);
+                Ok(vec)
+            })?
+            .into();
+
+        dict.marshal(endianness)
     }
 }
 
@@ -202,6 +232,54 @@ impl TryFrom<RawHeaderFields> for HeaderFields {
     }
 }
 
+impl TryInto<RawHeaderFields> for HeaderFields {
+    type Error = DbusParseError;
+
+    fn try_into(mut self) -> Result<RawHeaderFields, Self::Error> {
+        let mut hash: std::collections::HashMap<HeaderField, DbusVariant> =
+            std::collections::HashMap::default();
+
+        if let Some(path) = self.path.take() {
+            hash.insert(HeaderField::Path, path.try_into()?);
+        }
+
+        if let Some(interface) = self.interface.take() {
+            hash.insert(HeaderField::Interface, interface.try_into()?);
+        }
+
+        if let Some(member) = self.member.take() {
+            hash.insert(HeaderField::Member, member.try_into()?);
+        }
+
+        if let Some(error_name) = self.error_name.take() {
+            hash.insert(HeaderField::ErrorName, error_name.try_into()?);
+        }
+
+        if let Some(reply_serial) = self.reply_serial.take() {
+            hash.insert(HeaderField::ReplySerial, reply_serial.try_into()?);
+        }
+
+        if let Some(destination) = self.destination.take() {
+            hash.insert(HeaderField::Destination, destination.try_into()?);
+        }
+
+        if let Some(sender) = self.sender.take() {
+            hash.insert(HeaderField::Sender, sender.try_into()?);
+        }
+
+        if let Some(signature) = self.signature.take() {
+            let sig: DbusSignature = signature.into();
+            hash.insert(HeaderField::Signature, sig.try_into()?);
+        }
+
+        if let Some(unix_fds) = self.unix_fds.take() {
+            hash.insert(HeaderField::UnixFdCount, unix_fds.try_into()?);
+        }
+
+        Ok(RawHeaderFields(hash))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Header {
     fixed: FixedHeaderPart,
@@ -226,7 +304,11 @@ impl DbusType for Header {
     }
 
     fn marshal(self, endianness: MessageEndianness) -> Result<Vec<u8>, DbusParseError> {
-        unimplemented!()
+        let mut buf = vec![];
+        buf.extend(self.fixed.marshal(endianness)?);
+        let raw_fields: RawHeaderFields = self.fields.try_into()?;
+        buf.extend(raw_fields.marshal(endianness)?);
+        Ok(buf)
     }
 }
 

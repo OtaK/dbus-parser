@@ -54,6 +54,20 @@ impl DbusType for DbusSignature {
     }
 }
 
+impl From<Signature> for DbusSignature {
+    fn from(value: Signature) -> Self {
+        Self(
+            value
+                .into_inner()
+                .into_iter()
+                .fold(String::new(), |mut s, signature_type| {
+                    s.push(signature_type as u8 as char);
+                    s
+                }),
+        )
+    }
+}
+
 impl TryInto<Signature> for DbusSignature {
     type Error = DbusParseError;
 

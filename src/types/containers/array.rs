@@ -12,7 +12,7 @@ use nom::IResult;
 
 const DBUS_ARRAY_MAX_LENGTH: usize = 2 ^ 26;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct DbusArray<T: DbusType>(Vec<T>);
 
 impl<T: DbusType> DbusType for DbusArray<T> {

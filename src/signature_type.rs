@@ -151,6 +151,10 @@ impl Signature {
     pub fn new(signature: Vec<SignatureType>) -> Self {
         Signature(signature)
     }
+
+    pub fn into_inner(self) -> Vec<SignatureType> {
+        self.0
+    }
 }
 
 impl From<SignatureType> for Signature {
