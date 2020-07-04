@@ -1,5 +1,4 @@
-use crate::header::Header;
-use crate::type_container::DbusTypeContainer;
+use crate::{header::Header, type_container::DbusTypeContainer};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Message {

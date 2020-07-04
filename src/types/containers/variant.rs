@@ -1,8 +1,10 @@
-use crate::error::DbusParseError;
-use crate::header::components::MessageEndianness;
-use crate::types::basic::*;
-use crate::{DbusType, DbusTypeContainer};
-use crate::{Signature, SignatureType};
+use crate::{
+    error::DbusParseError,
+    header::components::MessageEndianness,
+    types::basic::*,
+    {DbusType, DbusTypeContainer},
+    {Signature, SignatureType},
+};
 use nom::IResult;
 use std::convert::{TryFrom, TryInto};
 

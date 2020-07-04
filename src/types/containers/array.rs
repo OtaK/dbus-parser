@@ -1,15 +1,18 @@
-use crate::error::DbusParseError;
-use crate::header::components::MessageEndianness;
-use crate::signature_type::Signature;
-use crate::types::basic::DbusUint32;
-use crate::DbusType;
-use nom::bytes::streaming::take;
-use nom::combinator::iterator;
-use nom::combinator::map;
-use nom::number::streaming::be_u32;
-use nom::number::streaming::le_u32;
-use nom::IResult;
-
+use crate::{
+    error::DbusParseError,
+    header::components::MessageEndianness,
+    signature_type::Signature,
+    types::basic::DbusUint32,
+    DbusType,
+};
+use nom::{
+    bytes::streaming::take,
+    combinator::iterator,
+    combinator::map,
+    number::streaming::be_u32,
+    number::streaming::le_u32,
+    IResult,
+};
 const DBUS_ARRAY_MAX_LENGTH: usize = 2 ^ 26;
 
 #[derive(Debug, Clone, Default, PartialEq)]

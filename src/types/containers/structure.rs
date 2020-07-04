@@ -1,9 +1,13 @@
-use crate::header::components::MessageEndianness;
-use crate::signature_type::Signature;
-use crate::type_container::DbusTypeContainer;
-use crate::{DbusParseError, DbusType};
-use nom::combinator::iterator;
-use nom::IResult;
+use crate::{
+    header::components::MessageEndianness,
+    signature_type::Signature,
+    type_container::DbusTypeContainer,
+    {DbusParseError, DbusType},
+};
+use nom::{
+    combinator::iterator,
+    IResult,
+};
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 

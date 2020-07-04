@@ -1,6 +1,4 @@
-use crate::error::DbusParseError;
-use crate::type_container::DbusTypeContainer;
-use crate::types::basic::DbusByte;
+use crate::{error::DbusParseError, type_container::DbusTypeContainer, types::basic::DbusByte};
 use bitflags::bitflags;
 use std::convert::{TryFrom, TryInto};
 

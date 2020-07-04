@@ -1,7 +1,9 @@
-use crate::error::DbusParseError;
-use crate::header::components::MessageEndianness;
-use crate::types::basic::*;
-use crate::{DbusType, DbusTypeContainer};
+use crate::{
+    error::DbusParseError,
+    header::components::MessageEndianness,
+    types::basic::*,
+    {DbusType, DbusTypeContainer},
+};
 use nom::combinator::map_res;
 use std::convert::TryFrom;
 

@@ -1,11 +1,13 @@
-use crate::error::DbusParseError;
-use crate::header::components::MessageEndianness;
-use crate::signature_type::Signature;
-use crate::types::basic::integer::DbusUint32;
-use crate::DbusType;
-use nom::combinator::map;
-use nom::number::streaming::{be_u32, le_u32};
-use nom::IResult;
+use crate::{
+    error::DbusParseError, header::components::MessageEndianness, signature_type::Signature,
+    types::basic::integer::DbusUint32, DbusType,
+};
+
+use nom::{
+    combinator::map,
+    number::streaming::{be_u32, le_u32},
+    IResult,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DbusBoolean(bool);

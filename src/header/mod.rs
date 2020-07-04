@@ -1,18 +1,22 @@
 pub mod components;
-
 use self::components::*;
-use crate::error::DbusParseError;
-use crate::message::Message;
-use crate::signature_type::{Signature, SignatureType};
-use crate::types::{basic::*, containers::*};
-use crate::DbusType;
-use nom::branch::alt;
+
+use crate::{
+    error::DbusParseError,
+    message::Message,
+    signature_type::{Signature, SignatureType},
+    types::{basic::*, containers::*},
+    DbusType,
+};
+
 use nom::{
+    branch::alt,
     combinator::{map, map_res},
     number::streaming::{be_u32, be_u8, le_u32, le_u8},
     sequence::tuple,
     *,
 };
+
 use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

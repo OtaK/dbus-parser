@@ -1,7 +1,9 @@
-use crate::header::components::MessageEndianness;
-use crate::types::{basic::*, containers::*};
-use crate::DbusParseError;
-use crate::DbusType;
+use crate::{
+    header::components::MessageEndianness,
+    types::{basic::*, containers::*},
+    DbusParseError,
+    DbusType,
+};
 use std::convert::TryFrom;
 
 macro_rules! impl_from_iresult_type {

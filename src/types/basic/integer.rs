@@ -1,10 +1,15 @@
-use crate::error::DbusParseError;
-use crate::header::components::MessageEndianness;
-use crate::signature_type::Signature;
-use crate::DbusType;
-use nom::combinator::map;
-use nom::number::streaming::*;
-use nom::IResult;
+use crate::{
+    error::DbusParseError,
+    header::components::MessageEndianness,
+    signature_type::Signature,
+    DbusType,
+};
+
+use nom::{
+    combinator::map,
+    number::streaming::*,
+    IResult,
+};
 
 macro_rules! __inner_marshal_get_bytes {
     ($self:ident, $endianness:ident, $align:expr) => {

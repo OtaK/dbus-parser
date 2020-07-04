@@ -1,14 +1,18 @@
-use crate::header::components::MessageEndianness;
-use crate::signature_type::Signature;
-use crate::types::basic::DbusUint32;
-use crate::DbusParseError;
-use crate::DbusType;
+use crate::{
+    header::components::MessageEndianness,
+    signature_type::Signature,
+    types::basic::DbusUint32,
+    DbusParseError,
+    DbusType,
+};
 use core::convert::TryFrom;
-use nom::bytes::streaming::*;
-use nom::combinator::map;
-use nom::combinator::map_res;
-use nom::number::streaming::{be_u32, le_u32};
-use nom::IResult;
+use nom::{
+    bytes::streaming::*,
+    combinator::map,
+    combinator::map_res,
+    number::streaming::{be_u32, le_u32},
+    IResult,
+};
 
 macro_rules! impl_string_parse {
     ($target:ty) => {
