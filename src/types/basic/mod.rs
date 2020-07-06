@@ -1,5 +1,5 @@
-mod integer;
-pub use self::integer::*;
+mod number;
+pub use self::number::*;
 
 mod boolean;
 pub use self::boolean::*;

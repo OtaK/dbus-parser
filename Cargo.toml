@@ -5,7 +5,10 @@ authors = ["Mathieu Amiot <amiot.mathieu@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-nom = "5.0.0"
-bitflags = "1.1.0"
-failure = "0.1.5"
-failure_derive = "0.1.5"
+nom = "5.1.2"
+bitflags = "1.2.1"
+failure = "0.1.8"
+failure_derive = "0.1.8"
+
+[dev-dependencies]
+rand = "0.7"
